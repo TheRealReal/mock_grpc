@@ -23,6 +23,7 @@ defmodule Demo.MixProject do
   defp deps do
     [
       {:grpc, "~> 0.6"},
+      {:protobuf, "~> 0.11"},
       {:mock_grpc, path: "../../"}
     ]
   end
