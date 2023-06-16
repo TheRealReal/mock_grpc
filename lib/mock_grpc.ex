@@ -14,14 +14,14 @@ defmodule MockGRPC do
 
   def setup do
     ExUnit.Callbacks.on_exit(fn ->
-      check_expectations()
-      MockGRPC.Server.clear_state()
+      verify!()
+      clear_state()
     end)
 
     :ok
   end
 
-  def check_expectations do
+  def verify! do
     state = MockGRPC.Server.get_expectations()
 
     failures =
@@ -40,4 +40,6 @@ defmodule MockGRPC do
   end
 
   def expect(request_mod, fun), do: MockGRPC.Server.expect(request_mod, fun)
+
+  def clear_state, do: MockGRPC.Server.clear_state()
 end
