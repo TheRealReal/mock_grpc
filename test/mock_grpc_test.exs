@@ -40,7 +40,7 @@ defmodule MockGRPCTest do
     end
 
     @tag capture_log: true
-    test "raises when there is no expectation for called received", %{channel: channel} do
+    test "raises when there is no expectation for call received", %{channel: channel} do
       request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
 
       assert_raise RuntimeError,
