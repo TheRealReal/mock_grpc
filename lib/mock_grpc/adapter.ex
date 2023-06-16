@@ -1,4 +1,6 @@
 defmodule MockGRPC.Adapter do
+  @moduledoc false
+
   alias GRPC.Client.Stream
 
   @behaviour GRPC.Client.Adapter

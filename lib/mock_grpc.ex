@@ -1,11 +1,12 @@
 defmodule MockGRPC do
   @moduledoc """
   To mock gRPC calls in the test suite you must add the following block to your test file
+
     setup do
       MockGRPC.setup()
     end
 
-  then, use MockGRPC.expect/2 to validate the calls. The first arg is the request module, followed by a fn that
+  then, use `MockGRPC.expect/2` to validate the calls. The first arg is the request module, followed by a fn that
   takes the mocked fn's arguments and returns your custom result.
 
   note: must be run async: false for now
