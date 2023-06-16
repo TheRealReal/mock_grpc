@@ -15,7 +15,7 @@ defmodule MockGRPCTest do
 
   describe "Mocking" do
     test "mocks the call", %{channel: channel} do
-      MockGRPC.expect(HelloWorldRequest, fn arg ->
+      MockGRPC.expect(TestService, :hello_world, fn arg ->
         assert %HelloWorldRequest{first_name: "John", last_name: "Doe"} = arg
         %HelloWorldResponse{message: "Hello John Doe"}
       end)
@@ -29,7 +29,7 @@ defmodule MockGRPCTest do
 
   describe "Verification" do
     test "does not raise when expectation is called", %{channel: channel} do
-      MockGRPC.expect(HelloWorldRequest, fn _ ->
+      MockGRPC.expect(TestService, :hello_world, fn _ ->
         %HelloWorldResponse{message: "Hello John Doe"}
       end)
 
@@ -49,7 +49,7 @@ defmodule MockGRPCTest do
     end
 
     test "raises when expectation is not called" do
-      MockGRPC.expect(HelloWorldRequest, fn _ ->
+      MockGRPC.expect(TestService, :hello_world, fn _ ->
         %HelloWorldResponse{message: "Hello John Doe"}
       end)
 

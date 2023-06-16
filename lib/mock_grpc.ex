@@ -39,7 +39,7 @@ defmodule MockGRPC do
     end
   end
 
-  def expect(request_mod, fun), do: MockGRPC.Server.expect(request_mod, fun)
+  def expect(service_module, rpc, fun), do: MockGRPC.Server.expect(service_module, rpc, fun)
 
   def clear_state, do: MockGRPC.Server.clear_state()
 end

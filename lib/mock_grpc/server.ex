@@ -7,17 +7,25 @@ defmodule MockGRPC.Server do
     Agent.start_link(fn -> [] end, name: __MODULE__)
   end
 
-  def expect(request_module, fun) do
-    Agent.update(__MODULE__, fn state ->
-      state ++ [%{request_module: request_module, fun: fun, called: false}]
-    end)
+  def expect(service_module, fun_name, mock_fun) do
+    service_name = service_module.__meta__(:name)
+
+    expectation = %{
+      service_module: service_module,
+      service_name: service_name,
+      fun_name: to_string(fun_name),
+      mock_fun: mock_fun,
+      called: false
+    }
+
+    Agent.update(__MODULE__, fn state -> state ++ [expectation] end)
   end
 
-  def call(request_mod) do
+  def call(service_name, fun_name) do
     Agent.get_and_update(__MODULE__, fn state ->
       index =
         Enum.find_index(state, fn
-          %{request_module: ^request_mod} -> true
+          %{service_name: ^service_name, fun_name: ^fun_name} -> true
           _else -> false
         end)
 
