@@ -23,13 +23,11 @@ defmodule MockGRPC.Adapter do
 
   @impl true
   def receive_data(
-        %Stream{
-          rpc: {fun_name, {_, _}, {_, _}},
-          service_name: service_name,
-          payload: %{input: input}
-        },
+        %Stream{rpc: rpc, service_name: service_name, payload: %{input: input}},
         _opts
       ) do
+    fun_name = elem(rpc, 0)
+
     case MockGRPC.Server.call(service_name, fun_name) do
       nil ->
         raise "Received unexpected gRPC call: `#{service_name}/#{fun_name}` with input: #{inspect(input)}"
