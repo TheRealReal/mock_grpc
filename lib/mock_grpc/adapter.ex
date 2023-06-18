@@ -36,10 +36,6 @@ defmodule MockGRPC.Adapter do
       """
     end
 
-    call_mock(test_key, service_name, fun_name, input)
-  end
-
-  defp call_mock(test_key, service_name, fun_name, input) do
     case MockGRPC.Server.call(test_key, service_name, fun_name) do
       nil ->
         raise "Received unexpected gRPC call: `#{service_name}/#{fun_name}` with input: #{inspect(input)}"
