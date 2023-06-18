@@ -1,9 +1,7 @@
 defmodule DemoTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
-  setup do
-    MockGRPC.setup()
-  end
+  use MockGRPC
 
   test "say_hello/2" do
     MockGRPC.expect(&Demo.TestService.Stub.hello_world/2, fn req ->

@@ -26,9 +26,21 @@ defmodule MockGRPC.Adapter do
         %Stream{rpc: rpc, service_name: service_name, payload: %{input: input}},
         _opts
       ) do
+    test_key = Process.get({MockGRPC, :test_key})
     fun_name = elem(rpc, 0)
 
-    case MockGRPC.Server.call(service_name, fun_name) do
+    if test_key == nil do
+      raise """
+      Received gRPC call`#{service_name}/#{fun_name}` without MockGRPC being set up.
+      Please make sure you've added `use MockGRPC` to your test file.
+      """
+    end
+
+    call_mock(test_key, service_name, fun_name, input)
+  end
+
+  defp call_mock(test_key, service_name, fun_name, input) do
+    case MockGRPC.Server.call(test_key, service_name, fun_name) do
       nil ->
         raise "Received unexpected gRPC call: `#{service_name}/#{fun_name}` with input: #{inspect(input)}"
 

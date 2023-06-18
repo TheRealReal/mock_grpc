@@ -1,6 +1,8 @@
 defmodule MockGRPCTest do
   use ExUnit.Case
 
+  use MockGRPC
+
   alias TestSupport.{
     TestService,
     HelloWorldRequest,
@@ -8,7 +10,6 @@ defmodule MockGRPCTest do
   }
 
   setup do
-    MockGRPC.clear_state()
     {:ok, channel} = GRPC.Stub.connect("localhost:50020", adapter: MockGRPC.Adapter)
     {:ok, %{channel: channel}}
   end
@@ -71,8 +72,6 @@ defmodule MockGRPCTest do
 
       request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
       TestService.Stub.hello_world(channel, request)
-
-      MockGRPC.verify!()
     end
 
     @tag capture_log: true
@@ -102,18 +101,26 @@ defmodule MockGRPCTest do
     end
 
     test "raises when expectation is not called" do
+      test_key = Process.get({MockGRPC, :test_key})
+
       MockGRPC.expect(TestService, :hello_world, fn _ ->
         %HelloWorldResponse{message: "Hello John Doe"}
       end)
 
       assert_raise RuntimeError,
                    "Expected to receive gRPC call to TestSupport.TestService.Stub.hello_world() but didn't",
-                   fn -> MockGRPC.verify!() end
+                   fn -> MockGRPC.verify!(test_key) end
+
+      # Clear expectations state to prevent the call to `MockGRPC.verify!` on `on_exit`
+      # from failing this test case
+      MockGRPC.Server.clear_state(test_key)
     end
 
     test "raises when expectation is not called (multiple expectations to same fun)", %{
       channel: channel
     } do
+      test_key = Process.get({MockGRPC, :test_key})
+
       for _ <- 1..2 do
         MockGRPC.expect(TestService, :hello_world, fn _ ->
           %HelloWorldResponse{message: "Hello"}
@@ -125,7 +132,11 @@ defmodule MockGRPCTest do
 
       assert_raise RuntimeError,
                    "Expected to receive gRPC call to TestSupport.TestService.Stub.hello_world() but didn't",
-                   fn -> MockGRPC.verify!() end
+                   fn -> MockGRPC.verify!(test_key) end
+
+      # Clear expectations state to prevent the call to `MockGRPC.verify!` on `on_exit`
+      # from failing this test case
+      MockGRPC.Server.clear_state(test_key)
     end
   end
 end
