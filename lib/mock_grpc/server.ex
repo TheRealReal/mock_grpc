@@ -2,6 +2,9 @@ defmodule MockGRPC.Server do
   # `MockGRPC.Server` is a process that keeps all expectations for the current test,
   # and pops them from the expectation list when the mock is called.
   #
+  # If at the end of the test there are expectations in the list, it means that those
+  # were not called and the test should fail.
+  #
   # Each test that uses `MockGRPC` will spawn its own `MockGRPC.Server` instance, and
   # the process name is tracked via `MockGRPC.Registry`, allowing for each test to have
   # access to their own state.
@@ -18,10 +21,11 @@ defmodule MockGRPC.Server do
   use Agent
 
   def start_link(opts) do
-    Agent.start_link(fn -> [] end, name: name(opts[:test_key]))
+    Agent.start_link(fn -> _expectations = [] end, name: name(opts[:test_key]))
   end
 
   def expect(test_key, service_module, fun_name, mock_fun) do
+    # https://github.com/elixir-grpc/grpc/blob/3cbd100/lib/grpc/service.ex#L23
     service_name = service_module.__meta__(:name)
 
     expectation = %{
@@ -33,31 +37,31 @@ defmodule MockGRPC.Server do
 
     Agent.update(
       name(test_key),
-      fn state -> state ++ [expectation] end
+      fn expectations -> expectations ++ [expectation] end
     )
   end
 
   def call(test_key, service_name, fun_name) do
-    Agent.get_and_update(name(test_key), fn state ->
+    Agent.get_and_update(name(test_key), fn expectations ->
       index =
-        Enum.find_index(state, fn
+        Enum.find_index(expectations, fn
           %{service_name: ^service_name, fun_name: ^fun_name} -> true
           _else -> false
         end)
 
       if index do
-        List.pop_at(state, index)
+        List.pop_at(expectations, index)
       else
-        {nil, state}
+        {nil, expectations}
       end
     end)
   end
 
   def get_expectations(test_key) do
-    Agent.get(name(test_key), fn state -> state end)
+    Agent.get(name(test_key), fn expectations -> expectations end)
   end
 
-  def clear_state(test_key) do
+  def clear_expectations(test_key) do
     Agent.update(name(test_key), fn _ -> [] end)
   end
 

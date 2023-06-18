@@ -113,7 +113,7 @@ defmodule MockGRPCTest do
 
       # Clear expectations state to prevent the call to `MockGRPC.verify!` on `on_exit`
       # from failing this test case
-      MockGRPC.Server.clear_state(test_key)
+      MockGRPC.Server.clear_expectations(test_key)
     end
 
     test "raises when expectation is not called (multiple expectations to same fun)", %{
@@ -136,7 +136,7 @@ defmodule MockGRPCTest do
 
       # Clear expectations state to prevent the call to `MockGRPC.verify!` on `on_exit`
       # from failing this test case
-      MockGRPC.Server.clear_state(test_key)
+      MockGRPC.Server.clear_expectations(test_key)
     end
   end
 end
