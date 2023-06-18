@@ -94,7 +94,7 @@ defmodule MockGRPC do
   def start_server(test_key) do
     DynamicSupervisor.start_child(
       MockGRPC.DynamicSupervisor,
-      {MockGRPC.Server, test_key: test_key}
+      {MockGRPC.Server, test_key}
     )
   end
 

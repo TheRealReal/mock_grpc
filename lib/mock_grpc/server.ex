@@ -20,8 +20,8 @@ defmodule MockGRPC.Server do
 
   use Agent
 
-  def start_link(opts) do
-    Agent.start_link(fn -> _expectations = [] end, name: name(opts[:test_key]))
+  def start_link(test_key) do
+    Agent.start_link(fn -> _expectations = [] end, name: name(test_key))
   end
 
   def expect(test_key, service_module, fun_name, mock_fun) do
