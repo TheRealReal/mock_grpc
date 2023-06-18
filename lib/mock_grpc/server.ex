@@ -61,5 +61,12 @@ defmodule MockGRPC.Server do
     Agent.update(name(test_key), fn _ -> [] end)
   end
 
+  def alive?(test_key) do
+    case Registry.lookup(MockGRPC.Registry, test_key) do
+      [{_pid, _}] -> true
+      _ -> false
+    end
+  end
+
   def name(test_key), do: {:via, Registry, {MockGRPC.Registry, test_key}}
 end
