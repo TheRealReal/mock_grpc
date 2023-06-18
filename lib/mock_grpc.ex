@@ -46,6 +46,23 @@ defmodule MockGRPC do
       end
   """
 
+  def setup(context) do
+    test_key = if context.async, do: self(), else: :global
+    Process.put({MockGRPC, :test_key}, test_key)
+
+    start_server(test_key)
+
+    # `on_exit` runs in a different process than the test, with its own process
+    # dictionary, so we need to manually pass `test_key` over to the function
+    # calls inside it.
+    ExUnit.Callbacks.on_exit(fn ->
+      verify!(test_key)
+      stop_server(test_key)
+    end)
+
+    :ok
+  end
+
   def expect(grpc_fun, mock_fun) when is_function(grpc_fun) and is_function(mock_fun) do
     case MockGRPC.Util.extract_grpc_fun(grpc_fun) do
       %{service_module: service_module, fun_name: fun_name} ->
@@ -71,23 +88,6 @@ defmodule MockGRPC do
     end
 
     MockGRPC.Server.expect(test_key, service_module, fun_name, mock_fun)
-  end
-
-  def setup(context) do
-    test_key = if context.async, do: self(), else: :global
-    Process.put({MockGRPC, :test_key}, test_key)
-
-    start_server(test_key)
-
-    # `on_exit` runs in a different process than the test, with its own process
-    # dictionary, so we need to manually pass `test_key` over to the function
-    # calls inside it.
-    ExUnit.Callbacks.on_exit(fn ->
-      verify!(test_key)
-      stop_server(test_key)
-    end)
-
-    :ok
   end
 
   @doc false
