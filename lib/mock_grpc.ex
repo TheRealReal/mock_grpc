@@ -22,16 +22,11 @@ defmodule MockGRPC do
   end
 
   def verify! do
-    state = MockGRPC.Server.get_expectations()
+    remaining_expectations = MockGRPC.Server.get_expectations()
 
-    failures =
-      Enum.filter(state, fn %{called: called} ->
-        called == false
-      end)
-
-    if failures != [] do
+    if remaining_expectations != [] do
       formatted_failures =
-        Enum.map(failures, fn %{service_module: mod, fun_name: fun} ->
+        Enum.map(remaining_expectations, fn %{service_module: mod, fun_name: fun} ->
           "Expected to receive gRPC call to #{mod_name(mod)}.Stub.#{fun}() but didn't"
         end)
 

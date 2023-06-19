@@ -8,15 +8,13 @@ defmodule MockGRPC.Server do
   end
 
   def expect(service_module, fun_name, mock_fun) do
-    # https://github.com/elixir-grpc/grpc/blob/3cbd100/lib/grpc/service.ex#L23
     service_name = service_module.__meta__(:name)
 
     expectation = %{
       service_module: service_module,
       service_name: service_name,
       fun_name: to_string(fun_name),
-      mock_fun: mock_fun,
-      called: false
+      mock_fun: mock_fun
     }
 
     Agent.update(__MODULE__, fn state -> state ++ [expectation] end)
@@ -31,11 +29,7 @@ defmodule MockGRPC.Server do
         end)
 
       if index do
-        state =
-          List.update_at(state, index, fn expectation -> Map.put(expectation, :called, true) end)
-
-        expectation = Enum.at(state, index)
-        {expectation, state}
+        List.pop_at(state, index)
       else
         {nil, state}
       end
