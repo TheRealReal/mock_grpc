@@ -35,7 +35,11 @@ defmodule MockGRPC.Util do
   defp get_test_key_from_callers([]), do: nil
 
   defp get_test_key_from_callers([caller | rest]) do
-    test_key = Process.info(caller)[:dictionary][MockGRPC]
+    test_key =
+      if info = Process.info(caller) do
+        info[:dictionary][MockGRPC]
+      end
+
     test_key || get_test_key_from_callers(rest)
   end
 end
