@@ -1,13 +1,13 @@
-# Make sure we run all tests for both sync and async mode
-for mode <- [:sync, :async] do
+# Make sure we run all tests on both sync and async mode
+for async <- [true, false] do
   test_module_name =
-    case mode do
-      :sync -> MockGRPCTest
-      :async -> MockGRPC.AsyncTest
+    case async do
+      true -> MockGRPC.AsyncTest
+      false -> MockGRPC.SyncTest
     end
 
   defmodule test_module_name do
-    use ExUnit.Case, async: mode == :async
+    use ExUnit.Case, async: async
 
     use MockGRPC
 
