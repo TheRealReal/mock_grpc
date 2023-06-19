@@ -2,7 +2,7 @@
 # Half are sync and half are async.
 # The goal is to verify if mock isolation is working properly.
 for i <- 1..20 do
-  defmodule String.to_atom("Elixir.MockGRPC.Integration.Async#{i}Test") do
+  defmodule String.to_atom("Elixir.MockGRPC.Integration.MultipleAsync#{i}Test") do
     use ExUnit.Case, async: i <= 10
 
     use MockGRPC
