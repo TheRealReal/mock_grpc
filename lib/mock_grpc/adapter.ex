@@ -26,7 +26,7 @@ defmodule MockGRPC.Adapter do
         %Stream{rpc: rpc, service_name: service_name, payload: %{input: input}},
         _opts
       ) do
-    test_key = Process.get({MockGRPC, :test_key}, :global)
+    test_key = Process.get(MockGRPC, :global)
     fun_name = elem(rpc, 0)
 
     unless MockGRPC.Server.alive?(test_key) do

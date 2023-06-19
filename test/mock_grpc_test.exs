@@ -101,7 +101,7 @@ defmodule MockGRPCTest do
     end
 
     test "raises when expectation is not called" do
-      test_key = Process.get({MockGRPC, :test_key})
+      test_key = Process.get(MockGRPC)
 
       MockGRPC.expect(TestService, :hello_world, fn _ ->
         %HelloWorldResponse{message: "Hello John Doe"}
@@ -119,7 +119,7 @@ defmodule MockGRPCTest do
     test "raises when expectation is not called (multiple expectations to same fun)", %{
       channel: channel
     } do
-      test_key = Process.get({MockGRPC, :test_key})
+      test_key = Process.get(MockGRPC)
 
       for _ <- 1..2 do
         MockGRPC.expect(TestService, :hello_world, fn _ ->

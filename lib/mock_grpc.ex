@@ -48,7 +48,7 @@ defmodule MockGRPC do
 
   def setup(context) do
     test_key = if context.async, do: self(), else: :global
-    Process.put({MockGRPC, :test_key}, test_key)
+    Process.put(MockGRPC, test_key)
 
     start_server(test_key)
 
@@ -78,7 +78,7 @@ defmodule MockGRPC do
 
   def expect(service_module, fun_name, mock_fun)
       when is_atom(service_module) and is_atom(fun_name) and is_function(mock_fun) do
-    test_key = Process.get({MockGRPC, :test_key})
+    test_key = Process.get(MockGRPC)
 
     if test_key == nil do
       raise """
