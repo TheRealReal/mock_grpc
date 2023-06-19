@@ -7,7 +7,7 @@ defmodule MockGRPC do
 
   ### Usage
 
-  Imagine that you have a module calling a `hello` RPC.
+  Imagine that you have a module calling a `say_hello` RPC.
 
       defmodule Demo do
         def say_hello(name) do
