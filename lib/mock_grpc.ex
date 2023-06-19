@@ -153,14 +153,16 @@ defmodule MockGRPC do
     MockGRPC.Server.expect(test_key, service_module, fun_name, mock_fun)
   end
 
-  defp start_server(test_key) do
+  @doc false
+  def start_server(test_key) do
     DynamicSupervisor.start_child(
       MockGRPC.DynamicSupervisor,
       {MockGRPC.Server, test_key}
     )
   end
 
-  defp stop_server(test_key) do
+  @doc false
+  def stop_server(test_key) do
     [{pid, _}] = Registry.lookup(MockGRPC.Registry, test_key)
     DynamicSupervisor.terminate_child(MockGRPC.DynamicSupervisor, pid)
   end
