@@ -46,10 +46,10 @@ defmodule MockGRPC do
       end
 
   All expectations are defined based on the current process. This means that if you call gRPC from
-  a separate process, and this process is not a `Task`, it won't have access to the expectations
+  a separate process, and this process is not a `Task`*, it won't have access to the expectations
   by default. But there are ways to overcome that. See the "Multi-process collaboration" section.
 
-  `Task` is supported by default due to its native
+  *`Task` is supported by default due to its native
   [caller tracking](https://hexdocs.pm/elixir/1.15.0/Task.html#module-ancestor-and-caller-tracking).
 
   ## Multi-process collaboration
