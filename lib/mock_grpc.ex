@@ -12,7 +12,7 @@ defmodule MockGRPC do
       defmodule Demo do
         def say_hello(name) do
           {:ok, channel} = GRPC.Stub.connect("localhost:50051")
-          TestService.Stub.hello(channel, %HelloWorldRequest{name: "John Doe"})
+          GreetService.Stub.say_hello(channel, %SayHelloRequest{name: "John Doe"})
         end
       end
 
@@ -40,12 +40,12 @@ defmodule MockGRPC do
         use MockGRPC
 
         test "say_hello/1" do
-          MockGRPC.expect(&TestService.Stub.hello_world/2, fn req ->
-            assert %HelloWorldRequest{name: "John Doe"} == req
-            %HelloWorldResponse{message: "Hello John Doe"}
+          MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+            assert %SayHelloRequest{name: "John Doe"} == req
+            %SayHelloResponse{message: "Hello John Doe"}
           end)
 
-          assert {:ok, %HelloWorldResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
+          assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
         end
       end
 
@@ -107,12 +107,12 @@ defmodule MockGRPC do
 
   Example:
 
-      MockGRPC.expect(&TestService.Stub.hello_world/2, fn req ->
-        assert %HelloWorldRequest{name: "John Doe"} == req
-        %HelloWorldResponse{message: "Hello John Doe"}
+      MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+        assert %SayHelloRequest{name: "John Doe"} == req
+        %SayHelloResponse{message: "Hello John Doe"}
       end)
 
-      assert {:ok, %HelloWorldResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
+      assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
   """
   def expect(grpc_fun, mock_fun) when is_function(grpc_fun) and is_function(mock_fun) do
     case MockGRPC.Util.extract_grpc_fun(grpc_fun) do
@@ -132,12 +132,12 @@ defmodule MockGRPC do
 
   Example:
 
-      MockGRPC.expect(TestService, :hello_world, fn req ->
-        assert %HelloWorldRequest{name: "John Doe"} == req
-        %HelloWorldResponse{message: "Hello John Doe"}
+      MockGRPC.expect(GreetService, :say_hello, fn req ->
+        assert %SayHelloRequest{name: "John Doe"} == req
+        %SayHelloResponse{message: "Hello John Doe"}
       end)
 
-      assert {:ok, %HelloWorldResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
+      assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
   """
   def expect(service_module, fun_name, mock_fun)
       when is_atom(service_module) and is_atom(fun_name) and is_function(mock_fun) do
@@ -193,9 +193,9 @@ defmodule MockGRPC do
       test "calling a mock from a different process" do
         parent = self()
 
-        MockGRPC.expect(&TestService.Stub.hello_world/2, fn req ->
-          assert %HelloWorldRequest{name: "John Doe"} == req
-          %HelloWorldResponse{message: "Hello John Doe"}
+        MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+          assert %SayHelloRequest{name: "John Doe"} == req
+          %SayHelloResponse{message: "Hello John Doe"}
         end)
 
         # This is just an example to demonstrate the concept. In a real world scenario, you'd
@@ -205,14 +205,14 @@ defmodule MockGRPC do
           MockGRPC.set_context(parent)
 
           {:ok, channel} = GRPC.Stub.connect("localhost:50051")
-          response = TestService.Stub.hello(channel, %HelloWorldRequest{name: "John Doe"})
+          response = GreetService.Stub.say_hello(channel, %SayHelloRequest{name: "John Doe"})
 
           # Do the assertion outside the process, to avoid a race condition where the test
           # finishes before this process completes execution.
           send(parent, {:my_process_result, response})
         end)
 
-        assert_receive {:my_process_result, %HelloWorldResponse{message: "Hello John Doe"}}
+        assert_receive {:my_process_result, %SayHelloResponse{message: "Hello John Doe"}}
       end
   """
   def set_context(test_key) do

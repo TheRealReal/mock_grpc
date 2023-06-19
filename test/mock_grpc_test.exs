@@ -12,9 +12,9 @@ for async <- [true, false] do
     use MockGRPC
 
     alias TestSupport.{
-      TestService,
-      HelloWorldRequest,
-      HelloWorldResponse
+      GreetService,
+      SayHelloRequest,
+      SayHelloResponse
     }
 
     setup do
@@ -24,106 +24,106 @@ for async <- [true, false] do
 
     describe "expect/2" do
       test "mocks the call", %{channel: channel} do
-        MockGRPC.expect(&TestService.Stub.hello_world/2, fn arg ->
-          assert %HelloWorldRequest{first_name: "John", last_name: "Doe"} = arg
-          %HelloWorldResponse{message: "Hello John Doe"}
+        MockGRPC.expect(&GreetService.Stub.say_hello/2, fn arg ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+          %SayHelloResponse{message: "Hello John Doe"}
         end)
 
-        request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-        response = TestService.Stub.hello_world(channel, request)
+        request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
+        response = GreetService.Stub.say_hello(channel, request)
 
-        assert %HelloWorldResponse{message: "Hello John Doe"} = response
+        assert %SayHelloResponse{message: "Hello John Doe"} = response
       end
     end
 
     describe "expect/3" do
       test "mocks the call", %{channel: channel} do
-        MockGRPC.expect(TestService, :hello_world, fn arg ->
-          assert %HelloWorldRequest{first_name: "John", last_name: "Doe"} = arg
-          %HelloWorldResponse{message: "Hello John Doe"}
+        MockGRPC.expect(GreetService, :say_hello, fn arg ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+          %SayHelloResponse{message: "Hello John Doe"}
         end)
 
-        request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-        response = TestService.Stub.hello_world(channel, request)
+        request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
+        response = GreetService.Stub.say_hello(channel, request)
 
-        assert %HelloWorldResponse{message: "Hello John Doe"} = response
+        assert %SayHelloResponse{message: "Hello John Doe"} = response
       end
 
       test "allows adding multiple mocks to the same function", %{channel: channel} do
-        MockGRPC.expect(TestService, :hello_world, fn _ ->
-          %HelloWorldResponse{message: "Hello 1"}
+        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+          %SayHelloResponse{message: "Hello 1"}
         end)
 
-        MockGRPC.expect(TestService, :hello_world, fn _ ->
-          %HelloWorldResponse{message: "Hello 2"}
+        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+          %SayHelloResponse{message: "Hello 2"}
         end)
 
-        assert %HelloWorldResponse{message: "Hello 1"} =
-                 TestService.Stub.hello_world(channel, %HelloWorldRequest{
+        assert %SayHelloResponse{message: "Hello 1"} =
+                 GreetService.Stub.say_hello(channel, %SayHelloRequest{
                    first_name: "John",
                    last_name: "Doe"
                  })
 
-        assert %HelloWorldResponse{message: "Hello 2"} =
-                 TestService.Stub.hello_world(channel, %HelloWorldRequest{
+        assert %SayHelloResponse{message: "Hello 2"} =
+                 GreetService.Stub.say_hello(channel, %SayHelloRequest{
                    first_name: "Richard",
                    last_name: "Roe"
                  })
       end
 
       test "makes mock available inside tasks created in the current process", %{channel: channel} do
-        MockGRPC.expect(TestService, :hello_world, fn arg ->
-          assert %HelloWorldRequest{first_name: "John", last_name: "Doe"} = arg
-          %HelloWorldResponse{message: "Hello John Doe"}
+        MockGRPC.expect(GreetService, :say_hello, fn arg ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+          %SayHelloResponse{message: "Hello John Doe"}
         end)
 
         response =
           Task.async(fn ->
-            request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-            TestService.Stub.hello_world(channel, request)
+            request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
+            GreetService.Stub.say_hello(channel, request)
           end)
           |> Task.await()
 
-        assert %HelloWorldResponse{message: "Hello John Doe"} = response
+        assert %SayHelloResponse{message: "Hello John Doe"} = response
       end
 
       test "supports nested task", %{channel: channel} do
-        MockGRPC.expect(TestService, :hello_world, fn arg ->
-          assert %HelloWorldRequest{first_name: "John", last_name: "Doe"} = arg
-          %HelloWorldResponse{message: "Hello John Doe"}
+        MockGRPC.expect(GreetService, :say_hello, fn arg ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+          %SayHelloResponse{message: "Hello John Doe"}
         end)
 
         response =
           Task.async(fn ->
             Task.async(fn ->
-              request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-              TestService.Stub.hello_world(channel, request)
+              request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
+              GreetService.Stub.say_hello(channel, request)
             end)
             |> Task.await()
           end)
           |> Task.await()
 
-        assert %HelloWorldResponse{message: "Hello John Doe"} = response
+        assert %SayHelloResponse{message: "Hello John Doe"} = response
       end
     end
 
     describe "Verification" do
       test "does not raise when expectation is called", %{channel: channel} do
-        MockGRPC.expect(TestService, :hello_world, fn _ ->
-          %HelloWorldResponse{message: "Hello John Doe"}
+        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+          %SayHelloResponse{message: "Hello John Doe"}
         end)
 
-        request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-        TestService.Stub.hello_world(channel, request)
+        request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
+        GreetService.Stub.say_hello(channel, request)
       end
 
       @tag capture_log: true
       test "raises when there is no expectation for call received", %{channel: channel} do
-        request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
+        request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
 
         assert_raise RuntimeError,
-                     ~r|Received unexpected gRPC call: `test_support\.TestService/hello_world` with input: %TestSupport\.HelloWorldRequest|,
-                     fn -> TestService.Stub.hello_world(channel, request) end
+                     ~r|Received unexpected gRPC call: `test_support\.GreetService/say_hello` with input: %TestSupport\.SayHelloRequest|,
+                     fn -> GreetService.Stub.say_hello(channel, request) end
       end
 
       @tag capture_log: true
@@ -131,28 +131,28 @@ for async <- [true, false] do
            %{
              channel: channel
            } do
-        MockGRPC.expect(TestService, :hello_world, fn _ ->
-          %HelloWorldResponse{message: "Hello"}
+        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+          %SayHelloResponse{message: "Hello"}
         end)
 
-        request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
+        request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
 
-        assert %HelloWorldResponse{} = TestService.Stub.hello_world(channel, request)
+        assert %SayHelloResponse{} = GreetService.Stub.say_hello(channel, request)
 
         assert_raise RuntimeError,
-                     ~r|Received unexpected gRPC call: `test_support\.TestService/hello_world` with input: %TestSupport\.HelloWorldRequest|,
-                     fn -> TestService.Stub.hello_world(channel, request) end
+                     ~r|Received unexpected gRPC call: `test_support\.GreetService/say_hello` with input: %TestSupport\.SayHelloRequest|,
+                     fn -> GreetService.Stub.say_hello(channel, request) end
       end
 
       test "raises when expectation is not called" do
         test_key = Process.get(MockGRPC)
 
-        MockGRPC.expect(TestService, :hello_world, fn _ ->
-          %HelloWorldResponse{message: "Hello John Doe"}
+        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+          %SayHelloResponse{message: "Hello John Doe"}
         end)
 
         assert_raise RuntimeError,
-                     "Expected to receive gRPC call to TestSupport.TestService.Stub.hello_world() but didn't",
+                     "Expected to receive gRPC call to TestSupport.GreetService.Stub.say_hello() but didn't",
                      fn -> MockGRPC.verify!(test_key) end
 
         # Clear expectations state to prevent the call to `MockGRPC.verify!` on `on_exit`
@@ -166,16 +166,16 @@ for async <- [true, false] do
         test_key = Process.get(MockGRPC)
 
         for _ <- 1..2 do
-          MockGRPC.expect(TestService, :hello_world, fn _ ->
-            %HelloWorldResponse{message: "Hello"}
+          MockGRPC.expect(GreetService, :say_hello, fn _ ->
+            %SayHelloResponse{message: "Hello"}
           end)
         end
 
-        request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-        assert %HelloWorldResponse{} = TestService.Stub.hello_world(channel, request)
+        request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
+        assert %SayHelloResponse{} = GreetService.Stub.say_hello(channel, request)
 
         assert_raise RuntimeError,
-                     "Expected to receive gRPC call to TestSupport.TestService.Stub.hello_world() but didn't",
+                     "Expected to receive gRPC call to TestSupport.GreetService.Stub.say_hello() but didn't",
                      fn -> MockGRPC.verify!(test_key) end
 
         # Clear expectations state to prevent the call to `MockGRPC.verify!` on `on_exit`

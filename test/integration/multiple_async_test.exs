@@ -8,26 +8,26 @@ for i <- 1..20 do
     use MockGRPC
 
     alias TestSupport.{
-      TestService,
-      HelloWorldRequest,
-      HelloWorldResponse
+      GreetService,
+      SayHelloRequest,
+      SayHelloResponse
     }
 
     test "async test" do
-      MockGRPC.expect(&TestService.Stub.hello_world/2, fn arg ->
-        assert %HelloWorldRequest{first_name: "John", last_name: "Doe"} = arg
-        %HelloWorldResponse{message: "Hello #{unquote(i)}"}
+      MockGRPC.expect(&GreetService.Stub.say_hello/2, fn arg ->
+        assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+        %SayHelloResponse{message: "Hello #{unquote(i)}"}
       end)
 
       # Allow for race conditions if code is not implemented properly
       :timer.sleep(Enum.random(0..500))
 
       {:ok, channel} = GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
-      request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-      response = TestService.Stub.hello_world(channel, request)
+      request = %SayHelloRequest{first_name: "John", last_name: "Doe"}
+      response = GreetService.Stub.say_hello(channel, request)
 
       expected_msg = "Hello #{unquote(i)}"
-      assert %HelloWorldResponse{message: ^expected_msg} = response
+      assert %SayHelloResponse{message: ^expected_msg} = response
     end
   end
 end

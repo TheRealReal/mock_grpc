@@ -28,7 +28,7 @@ Imagine that you have a module calling a `hello` RPC.
 defmodule Demo do
   def say_hello(name) do
     {:ok, channel} = GRPC.Stub.connect("localhost:50051")
-    TestService.Stub.hello(channel, %HelloWorldRequest{name: "John Doe"})
+    GreetService.Stub.say_hello(channel, %SayHelloRequest{name: "John Doe"})
   end
 end
 ```
@@ -61,12 +61,12 @@ defmodule DemoTest do
   use MockGRPC
 
   test "say_hello/1" do
-    MockGRPC.expect(&TestService.Stub.hello_world/2, fn req ->
-      assert %HelloWorldRequest{name: "John Doe"} == req
-      %HelloWorldResponse{message: "Hello John Doe"}
+    MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+      assert %SayHelloRequest{name: "John Doe"} == req
+      %SayHelloResponse{message: "Hello John Doe"}
     end)
 
-    assert {:ok, %HelloWorldResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
+    assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
   end
 end
 ```
