@@ -11,7 +11,7 @@ defmodule MockGRPC do
 
       defmodule Demo do
         def say_hello(name) do
-          {:ok, channel} = GRPC.Stub.connect("localhost:50020")
+          {:ok, channel} = GRPC.Stub.connect("localhost:50051")
           TestService.Stub.hello(channel, %HelloWorldRequest{name: "John Doe"})
         end
       end
@@ -19,16 +19,20 @@ defmodule MockGRPC do
   The first step is to change the `connect` code to use an adapter coming from the app environment, so that
   you can use `MockGRPC` in test mode, and the default adapter in dev and production.
 
-      {:ok, channel} = GRPC.Stub.connect("localhost:50020", adapter: Application.get_env(:demo, :grpc_adapter))
+      {:ok, channel} =
+        GRPC.Stub.connect(
+          "localhost:50051",
+          adapter: Application.get_env(:demo, :grpc_adapter)
+        )
+
+  Or if you're using [`ConnGRPC`](https://github.com/TheRealReal/conn_grpc), add `adapter` to the channel `opts`.
 
   Then, on your `config/test.exs`, set it to `MockGRPC.Adapter`:
 
       Application.put_env(:demo, :grpc_adapter, MockGRPC.Adapter)
 
-  Now it's time to write your test.
-
-  To enable mocks, add `use MockGRPC` to your test, and call `MockGRPC.expect/2` or `MockGRPC.expect/3`
-  to set expectations.
+  Now it's time to write your test. To enable mocks, add `use MockGRPC` to your test, and call
+  `MockGRPC.expect/2` or `MockGRPC.expect/3` to set expectations.
 
       defmodule DemoTest do
         use ExUnit.Case, async: true
@@ -49,56 +53,39 @@ defmodule MockGRPC do
   a separate process, and this process is not a `Task`*, it won't have access to the expectations
   by default. But there are ways to overcome that. See the "Multi-process collaboration" section.
 
-  *`Task` is supported by default due to its native
+  *`Task` is supported automatically with no extra code needed due to its native
   [caller tracking](https://hexdocs.pm/elixir/1.15.0/Task.html#module-ancestor-and-caller-tracking).
 
   ## Multi-process collaboration
 
   MockGRPC supports multi-process collaboration via two mechanisms:
 
-    1. global mode
-    2. explicit allowance
+    1. manually set context
+    2. global mode
+
+  ### Manually set context
+
+  In order for other processes to have access to your mocks, you can call `set_context/1`
+  on the external process passing the PID of the test.
 
   ### Global mode
 
   To support global mode, set your test `async` option to `false`. However, this won't allow
   your test file to execute in parallel with other tests.
-
-  ### Explicit allowance
-
-  In order for other processes to have access to your mocks, you can set the key `MockGRPC` of
-  your external process' dictionary to the PID of the test.
-
-  Example:
-
-      test "calling a mock from a different process" do
-        parent = self()
-
-        MockGRPC.expect(&TestService.Stub.hello_world/2, fn req ->
-          assert %HelloWorldRequest{name: "John Doe"} == req
-          %HelloWorldResponse{message: "Hello John Doe"}
-        end)
-
-        # This is just a example to demonstrate the concept. In a real world scenario, you'd
-        # be better off using the `Task` module, which doesn't require this workaround.
-        spawn(fn ->
-          # Ensures my process has access to the mocks
-          Process.put(MockGRPC, parent)
-
-          {:ok, channel} = GRPC.Stub.connect("localhost:50020")
-          response = TestService.Stub.hello(channel, %HelloWorldRequest{name: "John Doe"})
-
-          # Do the assertion outside the process, to avoid a race condition where the test
-          # finishes before this process.
-          send(parent, {:my_process_result, response})
-        end)
-
-        assert_receive {:my_process_result, %HelloWorldResponse{message: "Hello John Doe"}}
-      end
-
   """
 
+  require Logger
+
+  @doc false
   def setup(context) do
+    if Process.get(MockGRPC) do
+      Logger.warn("Attempted to set up MockGRPC twice. Skipping...")
+    else
+      do_setup(context)
+    end
+  end
+
+  defp do_setup(context) do
     test_key = if context.async, do: self(), else: :global
     Process.put(MockGRPC, test_key)
 
@@ -115,6 +102,18 @@ defmodule MockGRPC do
     :ok
   end
 
+  @doc """
+  Adds an expectation using a gRPC service function capture.
+
+  Example:
+
+      MockGRPC.expect(&TestService.Stub.hello_world/2, fn req ->
+        assert %HelloWorldRequest{name: "John Doe"} == req
+        %HelloWorldResponse{message: "Hello John Doe"}
+      end)
+
+      assert {:ok, %HelloWorldResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
+  """
   def expect(grpc_fun, mock_fun) when is_function(grpc_fun) and is_function(mock_fun) do
     case MockGRPC.Util.extract_grpc_fun(grpc_fun) do
       %{service_module: service_module, fun_name: fun_name} ->
@@ -128,6 +127,18 @@ defmodule MockGRPC do
     end
   end
 
+  @doc """
+  Adds an expectation using the gRPC service module and function name.
+
+  Example:
+
+      MockGRPC.expect(TestService, :hello_world, fn req ->
+        assert %HelloWorldRequest{name: "John Doe"} == req
+        %HelloWorldResponse{message: "Hello John Doe"}
+      end)
+
+      assert {:ok, %HelloWorldResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
+  """
   def expect(service_module, fun_name, mock_fun)
       when is_atom(service_module) and is_atom(fun_name) and is_function(mock_fun) do
     test_key = Process.get(MockGRPC)
@@ -142,16 +153,14 @@ defmodule MockGRPC do
     MockGRPC.Server.expect(test_key, service_module, fun_name, mock_fun)
   end
 
-  @doc false
-  def start_server(test_key) do
+  defp start_server(test_key) do
     DynamicSupervisor.start_child(
       MockGRPC.DynamicSupervisor,
       {MockGRPC.Server, test_key}
     )
   end
 
-  @doc false
-  def stop_server(test_key) do
+  defp stop_server(test_key) do
     [{pid, _}] = Registry.lookup(MockGRPC.Registry, test_key)
     DynamicSupervisor.terminate_child(MockGRPC.DynamicSupervisor, pid)
   end
@@ -171,6 +180,42 @@ defmodule MockGRPC do
   end
 
   defp mod_name(mod), do: mod |> to_string() |> String.replace("Elixir.", "", global: false)
+
+  @doc """
+  Set mock context, in case the mock is being called from another process in an async test.
+
+  This is not needed for `Task` processes.
+
+  Example:
+
+      test "calling a mock from a different process" do
+        parent = self()
+
+        MockGRPC.expect(&TestService.Stub.hello_world/2, fn req ->
+          assert %HelloWorldRequest{name: "John Doe"} == req
+          %HelloWorldResponse{message: "Hello John Doe"}
+        end)
+
+        # This is just an example to demonstrate the concept. In a real world scenario, you'd
+        # be better off using the `Task` module, which doesn't require calling `set_context`
+        spawn(fn ->
+          # Ensure this process has access to the mocks
+          MockGRPC.set_context(parent)
+
+          {:ok, channel} = GRPC.Stub.connect("localhost:50051")
+          response = TestService.Stub.hello(channel, %HelloWorldRequest{name: "John Doe"})
+
+          # Do the assertion outside the process, to avoid a race condition where the test
+          # finishes before this process completes execution.
+          send(parent, {:my_process_result, response})
+        end)
+
+        assert_receive {:my_process_result, %HelloWorldResponse{message: "Hello John Doe"}}
+      end
+  """
+  def set_context(test_key) do
+    Process.put(MockGRPC, test_key)
+  end
 
   defmacro __using__(opts \\ []) do
     quote do

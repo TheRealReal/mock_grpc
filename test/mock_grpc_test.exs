@@ -18,7 +18,7 @@ for async <- [true, false] do
     }
 
     setup do
-      {:ok, channel} = GRPC.Stub.connect("localhost:50020", adapter: MockGRPC.Adapter)
+      {:ok, channel} = GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
       {:ok, %{channel: channel}}
     end
 

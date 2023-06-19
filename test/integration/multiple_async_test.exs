@@ -22,7 +22,7 @@ for i <- 1..20 do
       # Allow for race conditions if code is not implemented properly
       :timer.sleep(Enum.random(0..500))
 
-      {:ok, channel} = GRPC.Stub.connect("localhost:50020", adapter: MockGRPC.Adapter)
+      {:ok, channel} = GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
       request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
       response = TestService.Stub.hello_world(channel, request)
 
