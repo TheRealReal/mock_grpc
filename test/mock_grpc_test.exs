@@ -77,15 +77,14 @@ for async <- [true, false] do
           %HelloWorldResponse{message: "Hello John Doe"}
         end)
 
-        parent = self()
+        response =
+          Task.async(fn ->
+            request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
+            TestService.Stub.hello_world(channel, request)
+          end)
+          |> Task.await()
 
-        Task.async(fn ->
-          request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-          response = TestService.Stub.hello_world(channel, request)
-          send(parent, {:task_response, response})
-        end)
-
-        assert_receive {:task_response, %HelloWorldResponse{message: "Hello John Doe"}}
+        assert %HelloWorldResponse{message: "Hello John Doe"} = response
       end
 
       test "supports nested task", %{channel: channel} do
@@ -94,17 +93,17 @@ for async <- [true, false] do
           %HelloWorldResponse{message: "Hello John Doe"}
         end)
 
-        parent = self()
-
-        Task.async(fn ->
+        response =
           Task.async(fn ->
-            request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
-            response = TestService.Stub.hello_world(channel, request)
-            send(parent, {:task_response, response})
+            Task.async(fn ->
+              request = %HelloWorldRequest{first_name: "John", last_name: "Doe"}
+              TestService.Stub.hello_world(channel, request)
+            end)
+            |> Task.await()
           end)
-        end)
+          |> Task.await()
 
-        assert_receive {:task_response, %HelloWorldResponse{message: "Hello John Doe"}}
+        assert %HelloWorldResponse{message: "Hello John Doe"} = response
       end
     end
 
