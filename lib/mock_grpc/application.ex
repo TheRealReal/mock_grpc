@@ -4,7 +4,11 @@ defmodule MockGRPC.Application do
   use Application
 
   def start(_type, _args) do
-    children = [MockGRPC.Server]
+    children = [
+      {DynamicSupervisor, strategy: :one_for_one, name: MockGRPC.DynamicSupervisor},
+      {Registry, name: MockGRPC.Registry, keys: :unique}
+    ]
+
     Supervisor.start_link(children, strategy: :one_for_one, name: MockGRPC.Supervisor)
   end
 end
