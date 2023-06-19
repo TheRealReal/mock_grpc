@@ -44,6 +44,58 @@ defmodule MockGRPC do
           assert {:ok, %HelloWorldResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
         end
       end
+
+  All expectations are defined based on the current process. This means that if you call gRPC from
+  a separate process, and this process is not a `Task`, it won't have access to the expectations
+  by default. But there are ways to overcome that. See the "Multi-process collaboration" section.
+
+  `Task` is supported by default due to its native
+  [caller tracking](https://hexdocs.pm/elixir/1.15.0/Task.html#module-ancestor-and-caller-tracking).
+
+  ## Multi-process collaboration
+
+  MockGRPC supports multi-process collaboration via two mechanisms:
+
+    1. global mode
+    2. explicit allowance
+
+  ### Global mode
+
+  To support global mode, set your test `async` option to `false`. However, this won't allow
+  your test file to execute in parallel with other tests.
+
+  ### Explicit allowance
+
+  In order for other processes to have access to your mocks, you can set the key `MockGRPC` of
+  your external process' dictionary to the PID of the test.
+
+  Example:
+
+      test "calling a mock from a different process" do
+        parent = self()
+
+        MockGRPC.expect(&TestService.Stub.hello_world/2, fn req ->
+          assert %HelloWorldRequest{name: "John Doe"} == req
+          %HelloWorldResponse{message: "Hello John Doe"}
+        end)
+
+        # This is just a example to demonstrate the concept. In a real world scenario, you'd
+        # be better off using the `Task` module, which doesn't require this workaround.
+        spawn(fn ->
+          # Ensures my process has access to the mocks
+          Process.put(MockGRPC, parent)
+
+          {:ok, channel} = GRPC.Stub.connect("localhost:50020")
+          response = TestService.Stub.hello(channel, %HelloWorldRequest{name: "John Doe"})
+
+          # Do the assertion outside the process, to avoid a race condition where the test
+          # finishes before this process.
+          send(parent, {:my_process_result, response})
+        end)
+
+        assert_receive {:my_process_result, %HelloWorldResponse{message: "Hello John Doe"}}
+      end
+
   """
 
   def setup(context) do
