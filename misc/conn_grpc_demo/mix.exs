@@ -24,8 +24,8 @@ defmodule Demo.MixProject do
     [
       {:grpc, "~> 0.6"},
       {:protobuf, "~> 0.11"},
-      {:mock_grpc, path: "../../"},
-      {:conn_grpc, github: "TheRealReal/conn_grpc"}
+      {:conn_grpc, "~> 0.2.0"},
+      {:mock_grpc, path: "../../"}
     ]
   end
 end
