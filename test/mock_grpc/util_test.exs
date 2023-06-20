@@ -68,12 +68,12 @@ defmodule MockGRPC.UtilTest do
 
   describe "get_test_key/1" do
     test "gets test key from dictionary of the process passed" do
-      Process.put(MockGRPC, :foo)
+      Process.put(MockGRPC, self())
 
       parent = self()
 
       spawn(fn ->
-        assert get_test_key(parent) == :foo
+        assert get_test_key(parent) == parent
         send(parent, :done)
       end)
 
@@ -92,13 +92,15 @@ defmodule MockGRPC.UtilTest do
     end
 
     test "gets correct test key inside Task" do
-      Process.put(MockGRPC, :foo)
+      Process.put(MockGRPC, self())
+
+      parent = self()
 
       Task.async(fn ->
         task_pid = self()
 
         spawn(fn ->
-          assert get_test_key(task_pid) == :foo
+          assert get_test_key(task_pid) == parent
           send(task_pid, :done)
         end)
 
