@@ -7,7 +7,19 @@ defmodule MockGRPC.Adapter do
 
   @impl true
   def connect(channel, _opts) do
-    {:ok, channel}
+    test_key = MockGRPC.Util.get_test_key()
+
+    unless MockGRPC.Server.alive?(test_key) do
+      raise """
+      Received gRPC connect without MockGRPC being set up.
+      Please make sure you've added `use MockGRPC` to your test file.
+      """
+    end
+
+    case MockGRPC.Server.get_status(test_key) do
+      :up -> {:ok, channel}
+      :down -> {:error, :econnrefused}
+    end
   end
 
   @impl true
@@ -31,7 +43,7 @@ defmodule MockGRPC.Adapter do
 
     unless MockGRPC.Server.alive?(test_key) do
       raise """
-      Received gRPC call`#{service_name}/#{fun_name}` without MockGRPC being set up.
+      Received gRPC call `#{service_name}/#{fun_name}` without MockGRPC being set up.
       Please make sure you've added `use MockGRPC` to your test file.
       """
     end

@@ -21,7 +21,15 @@ defmodule MockGRPC.Server do
   use Agent
 
   def start_link(test_key) do
-    Agent.start_link(fn -> _expectations = [] end, name: name(test_key))
+    Agent.start_link(fn -> %{status: :up, expectations: []} end, name: name(test_key))
+  end
+
+  def up(test_key) do
+    Agent.update(name(test_key), &Map.put(&1, :status, :up))
+  end
+
+  def down(test_key) do
+    Agent.update(name(test_key), &Map.put(&1, :status, :down))
   end
 
   def expect(test_key, service_module, fun_name, mock_fun) do
@@ -37,12 +45,12 @@ defmodule MockGRPC.Server do
 
     Agent.update(
       name(test_key),
-      fn expectations -> expectations ++ [expectation] end
+      &Map.update!(&1, :expectations, fn expectations -> expectations ++ [expectation] end)
     )
   end
 
   def call(test_key, service_name, fun_name) do
-    Agent.get_and_update(name(test_key), fn expectations ->
+    Agent.get_and_update(name(test_key), fn %{expectations: expectations} = state ->
       index =
         Enum.find_index(expectations, fn
           %{service_name: ^service_name, fun_name: ^fun_name} -> true
@@ -50,19 +58,24 @@ defmodule MockGRPC.Server do
         end)
 
       if index do
-        List.pop_at(expectations, index)
+        {expectation, expectations} = List.pop_at(expectations, index)
+        {expectation, Map.put(state, :expectations, expectations)}
       else
-        {nil, expectations}
+        {nil, state}
       end
     end)
   end
 
+  def get_status(test_key) do
+    Agent.get(name(test_key), fn state -> state.status end)
+  end
+
   def get_expectations(test_key) do
-    Agent.get(name(test_key), fn expectations -> expectations end)
+    Agent.get(name(test_key), fn state -> state.expectations end)
   end
 
   def clear_expectations(test_key) do
-    Agent.update(name(test_key), fn _ -> [] end)
+    Agent.update(name(test_key), &Map.put(&1, :expectations, []))
   end
 
   def alive?(test_key) do
