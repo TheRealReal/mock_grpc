@@ -183,5 +183,49 @@ for async <- [true, false] do
         MockGRPC.Server.clear_expectations(test_key)
       end
     end
+
+    describe "up/0 and down/0" do
+      test "changes return value of GRPC.Stub.connect/2" do
+        assert {:ok, %GRPC.Channel{}} =
+                 GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
+
+        MockGRPC.down()
+
+        assert {:error, :econnrefused} =
+                 GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
+
+        MockGRPC.up()
+
+        assert {:ok, %GRPC.Channel{}} =
+                 GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
+      end
+    end
+
+    if async do
+      describe "set_context/1" do
+        test "makes mocks availble inside the process", %{channel: channel} do
+          parent = self()
+
+          MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+            assert %SayHelloRequest{first_name: "John", last_name: "Doe"} == req
+            %SayHelloResponse{message: "Hello John Doe"}
+          end)
+
+          spawn(fn ->
+            MockGRPC.set_context(parent)
+
+            response =
+              GreetService.Stub.say_hello(channel, %SayHelloRequest{
+                first_name: "John",
+                last_name: "Doe"
+              })
+
+            send(parent, {:my_process_result, response})
+          end)
+
+          assert_receive {:my_process_result, %SayHelloResponse{message: "Hello John Doe"}}
+        end
+      end
+    end
   end
 end

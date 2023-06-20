@@ -103,6 +103,22 @@ defmodule MockGRPC do
   end
 
   @doc """
+  Makes `GRPC.Stub.connect/2` return successfully, reverting the `down/0` call.
+  """
+  def up do
+    test_key = Process.get(MockGRPC)
+    MockGRPC.Server.up(test_key)
+  end
+
+  @doc """
+  Makes `GRPC.Stub.connect/2` return an error tuple.
+  """
+  def down do
+    test_key = Process.get(MockGRPC)
+    MockGRPC.Server.down(test_key)
+  end
+
+  @doc """
   Adds an expectation using a gRPC service function capture.
 
   Example:
@@ -204,7 +220,7 @@ defmodule MockGRPC do
           # Ensure this process has access to the mocks
           MockGRPC.set_context(parent)
 
-          {:ok, channel} = GRPC.Stub.connect("localhost:50051")
+          {:ok, channel} = GRPC.Stub.connect("localhost:50051", adapter: Application.get_env(:demo, :grpc_adapter))
           response = GreetService.Stub.say_hello(channel, %SayHelloRequest{name: "John Doe"})
 
           # Do the assertion outside the process, to avoid a race condition where the test

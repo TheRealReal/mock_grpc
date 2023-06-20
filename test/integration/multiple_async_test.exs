@@ -13,7 +13,7 @@ for i <- 1..20 do
       SayHelloResponse
     }
 
-    test "async test" do
+    test "expect" do
       MockGRPC.expect(&GreetService.Stub.say_hello/2, fn arg ->
         assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
         %SayHelloResponse{message: "Hello #{unquote(i)}"}
@@ -28,6 +28,25 @@ for i <- 1..20 do
 
       expected_msg = "Hello #{unquote(i)}"
       assert %SayHelloResponse{message: ^expected_msg} = response
+    end
+
+    test "up and down" do
+      assert {:ok, %GRPC.Channel{}} =
+               GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
+
+      MockGRPC.down()
+
+      :timer.sleep(Enum.random(0..500))
+
+      assert {:error, :econnrefused} =
+               GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
+
+      MockGRPC.up()
+
+      :timer.sleep(Enum.random(0..500))
+
+      assert {:ok, %GRPC.Channel{}} =
+               GRPC.Stub.connect("localhost:50051", adapter: MockGRPC.Adapter)
     end
   end
 end
