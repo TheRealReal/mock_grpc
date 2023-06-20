@@ -224,6 +224,32 @@ for async <- [true, false] do
 
         assert_receive {:my_process_result, %SayHelloResponse{message: "Hello John Doe"}}
       end
+
+      test "works when nested inside a Task", %{channel: channel} do
+        MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} == req
+          %SayHelloResponse{message: "Hello John Doe"}
+        end)
+
+        Task.async(fn ->
+          task_pid = self()
+
+          spawn(fn ->
+            MockGRPC.set_context(task_pid)
+
+            response =
+              GreetService.Stub.say_hello(channel, %SayHelloRequest{
+                first_name: "John",
+                last_name: "Doe"
+              })
+
+            send(task_pid, {:my_process_result, response})
+          end)
+
+          assert_receive {:my_process_result, %SayHelloResponse{message: "Hello John Doe"}}
+        end)
+        |> Task.await()
+      end
     end
   end
 end

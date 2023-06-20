@@ -50,7 +50,10 @@ defmodule MockGRPC.MixProject do
       main: "MockGRPC",
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/mock_grpc",
-      source_url: @source_url
+      source_url: @source_url,
+      extras: [
+        "guides/conn_grpc.md": [filename: "conn_grpc", title: "Integrating with ConnGRPC"]
+      ]
     ]
   end
 end
