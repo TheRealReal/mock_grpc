@@ -5,12 +5,12 @@ To make `MockGRPC.up/0` and `MockGRPC.down/0` work with ConnGRPC, you can use it
 First, add to your test configuration file (e.g. `config/test.exs`):
 
 ```elixir
-config :demo, :conn_grpc_adapter, MockGRPC.Adapter
+Application.put_env(:demo, :conn_grpc_adapter, MockGRPC.Adapter)
 
-config :demo, :conn_grpc_mock, fn test_pid ->
+Application.put_env(:demo, :conn_grpc_mock, fn test_pid ->
   MockGRPC.set_context(test_pid)
   GRPC.Stub.connect("dummy", adapter: MockGRPC.Adapter)
-end
+end)
 ```
 
 Then, pass `mock` to your channel configuration.
