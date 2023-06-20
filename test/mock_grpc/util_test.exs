@@ -54,8 +54,6 @@ defmodule MockGRPC.UtilTest do
     end
 
     test "returns :global when test key cannot be found in $callers" do
-      parent = self()
-
       result =
         Task.async(fn ->
           Task.async(fn -> get_test_key() end) |> Task.await()
