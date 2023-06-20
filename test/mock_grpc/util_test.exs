@@ -5,11 +5,11 @@ defmodule MockGRPC.UtilTest do
 
   describe "extract_grpc_fun/1" do
     test "extracts data from function capture" do
-      result = extract_grpc_fun(&TestSupport.TestService.Stub.hello_world/2)
+      result = extract_grpc_fun(&TestSupport.GreetService.Stub.say_hello/2)
 
       assert result == %{
-               service_module: TestSupport.TestService,
-               fun_name: :hello_world
+               service_module: TestSupport.GreetService,
+               fun_name: :say_hello
              }
     end
 

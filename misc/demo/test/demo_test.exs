@@ -4,12 +4,12 @@ defmodule DemoTest do
   use MockGRPC
 
   test "say_hello/2" do
-    MockGRPC.expect(&Demo.TestService.Stub.hello_world/2, fn req ->
-      assert %Demo.HelloWorldRequest{first_name: "John", last_name: "Doe"} == req
-      %Demo.HelloWorldResponse{message: "Hello John Doe"}
+    MockGRPC.expect(&Demo.GreetService.Stub.say_hello/2, fn req ->
+      assert %Demo.SayHelloRequest{first_name: "John", last_name: "Doe"} == req
+      %Demo.SayHelloResponse{message: "Hello John Doe"}
     end)
 
-    assert {:ok, %Demo.HelloWorldResponse{message: "Hello John Doe"}} =
+    assert {:ok, %Demo.SayHelloResponse{message: "Hello John Doe"}} =
              Demo.say_hello("John", "Doe")
   end
 end
