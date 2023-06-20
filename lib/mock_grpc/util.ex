@@ -24,12 +24,12 @@ defmodule MockGRPC.Util do
   # $callers process dictinary, so that it works with `Task`.
   # More info: https://hexdocs.pm/elixir/1.15.0/Task.html#module-ancestor-and-caller-tracking
   def get_test_key do
-    Process.get(MockGRPC) || get_test_key_from_callers() || :global
+    Process.get(MockGRPC) || get_test_key_from_callers(Process.get(:"$callers", [])) || :global
   end
 
-  defp get_test_key_from_callers do
-    callers = Process.get(:"$callers", [])
-    get_test_key_from_callers(callers)
+  def get_test_key(pid) do
+    dictionary = Process.info(pid)[:dictionary]
+    dictionary[MockGRPC] || get_test_key_from_callers(dictionary[:"$callers"] || []) || :global
   end
 
   defp get_test_key_from_callers([]), do: nil

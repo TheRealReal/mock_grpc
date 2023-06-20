@@ -201,30 +201,28 @@ for async <- [true, false] do
       end
     end
 
-    if async do
-      describe "set_context/1" do
-        test "makes mocks availble inside the process", %{channel: channel} do
-          parent = self()
+    describe "set_context/1" do
+      test "makes mocks availble inside the process", %{channel: channel} do
+        parent = self()
 
-          MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
-            assert %SayHelloRequest{first_name: "John", last_name: "Doe"} == req
-            %SayHelloResponse{message: "Hello John Doe"}
-          end)
+        MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} == req
+          %SayHelloResponse{message: "Hello John Doe"}
+        end)
 
-          spawn(fn ->
-            MockGRPC.set_context(parent)
+        spawn(fn ->
+          MockGRPC.set_context(parent)
 
-            response =
-              GreetService.Stub.say_hello(channel, %SayHelloRequest{
-                first_name: "John",
-                last_name: "Doe"
-              })
+          response =
+            GreetService.Stub.say_hello(channel, %SayHelloRequest{
+              first_name: "John",
+              last_name: "Doe"
+            })
 
-            send(parent, {:my_process_result, response})
-          end)
+          send(parent, {:my_process_result, response})
+        end)
 
-          assert_receive {:my_process_result, %SayHelloResponse{message: "Hello John Doe"}}
-        end
+        assert_receive {:my_process_result, %SayHelloResponse{message: "Hello John Doe"}}
       end
     end
   end

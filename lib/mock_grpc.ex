@@ -111,7 +111,10 @@ defmodule MockGRPC do
   end
 
   @doc """
-  Makes `GRPC.Stub.connect/2` return an error tuple.
+  Makes `GRPC.Stub.connect/2` return an error tuple, simulating that the server is down.
+
+  If you're using `ConnGRPC`, you will need additional code to make it work.
+  See [conn_grpc.md](guides/conn_grpc.md#simulating-unavailable-channel)
   """
   def down do
     test_key = Process.get(MockGRPC)
@@ -231,8 +234,8 @@ defmodule MockGRPC do
         assert_receive {:my_process_result, %SayHelloResponse{message: "Hello John Doe"}}
       end
   """
-  def set_context(test_key) do
-    Process.put(MockGRPC, test_key)
+  def set_context(test_pid) do
+    Process.put(MockGRPC, MockGRPC.Util.get_test_key(test_pid))
   end
 
   defmacro __using__(opts \\ []) do
