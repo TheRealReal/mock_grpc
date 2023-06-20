@@ -1,4 +1,4 @@
-# Demo
+# ConnGRPC Demo
 
 ## Installation
 
