@@ -95,8 +95,11 @@ defmodule MockGRPC do
     # dictionary, so we need to manually pass `test_key` over to the function
     # calls inside it.
     ExUnit.Callbacks.on_exit(fn ->
-      verify!(test_key)
-      stop_server(test_key)
+      try do
+        verify!(test_key)
+      after
+        stop_server(test_key)
+      end
     end)
 
     :ok
