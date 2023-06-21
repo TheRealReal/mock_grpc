@@ -54,3 +54,9 @@ jobs:
         if: ${{ matrix.lint }}
 
       - run: mix test
+
+      - run: pwd
+
+      - run: cd misc/demo && mix test
+
+      - run: cd ../misc/conn_grpc_demo && mix test
