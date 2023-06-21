@@ -55,8 +55,18 @@ jobs:
 
       - run: mix test
 
-      - run: pwd
+      # Demo app
 
-      - run: cd misc/demo && mix test
+      - run: cd ${{ github.workspace }}/misc/demo
 
-      - run: cd ../misc/conn_grpc_demo && mix test
+      - run: mix deps.get
+
+      - run: mix test
+
+      # ConnGRPC demo app
+
+      - run: cd ${{ github.workspace }}/misc/conn_grpc_demo
+
+      - run: mix deps.get
+
+      - run: mix test
