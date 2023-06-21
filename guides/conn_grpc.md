@@ -52,4 +52,4 @@ from testing different scenarios where the channel is up.
 To overcome that, `ConnGRPC` allows passing a `mock` function on the channel setup, so that you
 can overwrite the channel returned by it. You can then integrate that mock function with
 `MockGRPC.set_context/1` and call `GRPC.Stub.connect/2` inside it to return the mocked channel
-in a isolated manner.
+in an isolated manner.
