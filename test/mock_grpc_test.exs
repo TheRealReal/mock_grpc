@@ -202,7 +202,7 @@ for async <- [true, false] do
     end
 
     describe "set_context/1" do
-      test "makes mocks availble inside the process", %{channel: channel} do
+      test "makes mocks available inside the process", %{channel: channel} do
         parent = self()
 
         MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
