@@ -34,6 +34,12 @@ for async <- [true, false] do
 
         assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = response
       end
+
+      test "raises when function capture passed is not from a gRPC stub" do
+        assert_raise RuntimeError,
+                     ~r|Invalid function passed to `MockGRPC.expect/2`|,
+                     fn -> MockGRPC.expect(&Enum.map/2, fn _ -> nil end) end
+      end
     end
 
     describe "expect/3" do
@@ -104,6 +110,12 @@ for async <- [true, false] do
           |> Task.await()
 
         assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = response
+      end
+
+      test "raises when module passed does not use GRPC.Service" do
+        assert_raise RuntimeError,
+                     ~r|Invalid service module passed to `MockGRPC.expect/3`|,
+                     fn -> MockGRPC.expect(Enum, :map, fn _ -> nil end) end
       end
     end
 

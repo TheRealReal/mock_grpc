@@ -143,7 +143,7 @@ defmodule MockGRPC do
 
       _ ->
         raise """
-        Invalid function passed to MockGRPC.expect/2.
+        Invalid function passed to `MockGRPC.expect/2`.
         Expected a stub function capture, e.g.: `&MyService.Stub.fun/2`. Received #{inspect(grpc_fun)}.
         """
     end
@@ -163,6 +163,15 @@ defmodule MockGRPC do
   """
   def expect(service_module, fun_name, mock_fun)
       when is_atom(service_module) and is_atom(fun_name) and is_function(mock_fun) do
+    Code.ensure_loaded(service_module)
+
+    unless function_exported?(service_module, :__meta__, 1) do
+      raise """
+      Invalid service module passed to `MockGRPC.expect/3`.
+      Expected a module that uses `GRPC.Service`.
+      """
+    end
+
     test_key = Process.get(MockGRPC)
 
     if test_key == nil do
