@@ -36,41 +36,89 @@ defmodule MockGRPC.UtilTest do
       parent = self()
       Process.put(MockGRPC, parent)
 
-      Task.async(fn ->
-        send(parent, {:test_key_inside_task, get_test_key()})
-      end)
-      |> Task.await()
-
-      assert_receive {:test_key_inside_task, ^parent}
+      result = Task.async(fn -> get_test_key() end) |> Task.await()
+      assert result == parent
     end
 
     test "gets correct test key inside nested Task" do
       parent = self()
       Process.put(MockGRPC, parent)
 
-      Task.async(fn ->
+      result =
         Task.async(fn ->
-          send(parent, {:test_key_inside_nested_task, get_test_key()})
+          Task.async(fn -> get_test_key() end) |> Task.await()
         end)
         |> Task.await()
-      end)
-      |> Task.await()
 
-      assert_receive {:test_key_inside_nested_task, ^parent}
+      assert result == parent
     end
 
     test "returns :global when test key cannot be found in $callers" do
+      result =
+        Task.async(fn ->
+          Task.async(fn -> get_test_key() end) |> Task.await()
+        end)
+        |> Task.await()
+
+      assert result == :global
+    end
+  end
+
+  describe "get_test_key/1" do
+    test "gets test key from dictionary of the process passed" do
+      Process.put(MockGRPC, self())
+
+      parent = self()
+
+      spawn(fn ->
+        assert get_test_key(parent) == parent
+        send(parent, :done)
+      end)
+
+      assert_receive :done
+    end
+
+    test "returns :global when pid passed doesn't have a test key" do
+      parent = self()
+
+      spawn(fn ->
+        assert get_test_key(parent) == :global
+        send(parent, :done)
+      end)
+
+      assert_receive :done
+    end
+
+    test "gets correct test key inside Task" do
+      Process.put(MockGRPC, self())
+
       parent = self()
 
       Task.async(fn ->
-        Task.async(fn ->
-          send(parent, {:test_key_inside_nested_task, get_test_key()})
+        task_pid = self()
+
+        spawn(fn ->
+          assert get_test_key(task_pid) == parent
+          send(task_pid, :done)
         end)
-        |> Task.await()
+
+        assert_receive :done
       end)
       |> Task.await()
+    end
 
-      assert_receive {:test_key_inside_nested_task, :global}
+    test "returns :global when test key cannot be found in $callers" do
+      Task.async(fn ->
+        task_pid = self()
+
+        spawn(fn ->
+          assert get_test_key(task_pid) == :global
+          send(task_pid, :done)
+        end)
+
+        assert_receive :done
+      end)
+      |> Task.await()
     end
   end
 end

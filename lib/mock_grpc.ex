@@ -103,6 +103,25 @@ defmodule MockGRPC do
   end
 
   @doc """
+  Makes `GRPC.Stub.connect/2` return successfully, reverting the `down/0` call.
+  """
+  def up do
+    test_key = Process.get(MockGRPC)
+    MockGRPC.Server.up(test_key)
+  end
+
+  @doc """
+  Makes `GRPC.Stub.connect/2` return an error tuple, simulating that the server is down.
+
+  If you're using `ConnGRPC`, you will need additional code to make it work.
+  See [ConnGRPC - Simulating unavailable channel](guides/conn_grpc.md#simulating-unavailable-channel)
+  """
+  def down do
+    test_key = Process.get(MockGRPC)
+    MockGRPC.Server.down(test_key)
+  end
+
+  @doc """
   Adds an expectation using a gRPC service function capture.
 
   Example:
@@ -204,7 +223,7 @@ defmodule MockGRPC do
           # Ensure this process has access to the mocks
           MockGRPC.set_context(parent)
 
-          {:ok, channel} = GRPC.Stub.connect("localhost:50051")
+          {:ok, channel} = GRPC.Stub.connect("localhost:50051", adapter: Application.get_env(:demo, :grpc_adapter))
           response = GreetService.Stub.say_hello(channel, %SayHelloRequest{name: "John Doe"})
 
           # Do the assertion outside the process, to avoid a race condition where the test
@@ -215,8 +234,8 @@ defmodule MockGRPC do
         assert_receive {:my_process_result, %SayHelloResponse{message: "Hello John Doe"}}
       end
   """
-  def set_context(test_key) do
-    Process.put(MockGRPC, test_key)
+  def set_context(test_pid) do
+    Process.put(MockGRPC, MockGRPC.Util.get_test_key(test_pid))
   end
 
   defmacro __using__(opts \\ []) do
