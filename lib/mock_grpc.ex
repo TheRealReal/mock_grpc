@@ -154,7 +154,7 @@ defmodule MockGRPC do
 
   Example:
 
-      MockGRPC.expect(GreetService, :say_hello, fn req ->
+      MockGRPC.expect(GreetService.Service, :say_hello, fn req ->
         assert %SayHelloRequest{name: "John Doe"} == req
         {:ok, %SayHelloResponse{message: "Hello John Doe"}}
       end)
@@ -196,14 +196,13 @@ defmodule MockGRPC do
     if remaining_expectations != [] do
       formatted_failures =
         Enum.map(remaining_expectations, fn %{service_module: mod, fun_name: fun} ->
-          "Expected to receive gRPC call to #{mod_name(mod)}.Stub.#{fun}() but didn't"
+          service_name = mod.__meta__(:name)
+          "Expected to receive gRPC call to `#{service_name}/#{fun}` but didn't"
         end)
 
       raise Enum.join(formatted_failures, "\n")
     end
   end
-
-  defp mod_name(mod), do: mod |> to_string() |> String.replace("Elixir.", "", global: false)
 
   @doc """
   Set mock context, in case the mock is being called from another process in an async test.

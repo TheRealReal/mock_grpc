@@ -38,7 +38,7 @@ for async <- [true, false] do
 
     describe "expect/3" do
       test "mocks the call", %{channel: channel} do
-        MockGRPC.expect(GreetService, :say_hello, fn arg ->
+        MockGRPC.expect(GreetService.Service, :say_hello, fn arg ->
           assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
@@ -50,11 +50,11 @@ for async <- [true, false] do
       end
 
       test "allows adding multiple mocks to the same function", %{channel: channel} do
-        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+        MockGRPC.expect(GreetService.Service, :say_hello, fn _ ->
           {:ok, %SayHelloResponse{message: "Hello 1"}}
         end)
 
-        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+        MockGRPC.expect(GreetService.Service, :say_hello, fn _ ->
           {:ok, %SayHelloResponse{message: "Hello 2"}}
         end)
 
@@ -72,7 +72,7 @@ for async <- [true, false] do
       end
 
       test "makes mock available inside tasks created in the current process", %{channel: channel} do
-        MockGRPC.expect(GreetService, :say_hello, fn arg ->
+        MockGRPC.expect(GreetService.Service, :say_hello, fn arg ->
           assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
@@ -88,7 +88,7 @@ for async <- [true, false] do
       end
 
       test "supports nested task", %{channel: channel} do
-        MockGRPC.expect(GreetService, :say_hello, fn arg ->
+        MockGRPC.expect(GreetService.Service, :say_hello, fn arg ->
           assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
@@ -109,7 +109,7 @@ for async <- [true, false] do
 
     describe "Verification" do
       test "does not raise when expectation is called", %{channel: channel} do
-        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+        MockGRPC.expect(GreetService.Service, :say_hello, fn _ ->
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
 
@@ -131,7 +131,7 @@ for async <- [true, false] do
            %{
              channel: channel
            } do
-        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+        MockGRPC.expect(GreetService.Service, :say_hello, fn _ ->
           {:ok, %SayHelloResponse{message: "Hello"}}
         end)
 
@@ -147,12 +147,12 @@ for async <- [true, false] do
       test "raises when expectation is not called" do
         test_key = Process.get(MockGRPC)
 
-        MockGRPC.expect(GreetService, :say_hello, fn _ ->
+        MockGRPC.expect(GreetService.Service, :say_hello, fn _ ->
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
 
         assert_raise RuntimeError,
-                     "Expected to receive gRPC call to TestSupport.GreetService.Stub.say_hello() but didn't",
+                     "Expected to receive gRPC call to `test_support\.GreetService/say_hello` but didn't",
                      fn -> MockGRPC.verify!(test_key) end
 
         # Clear expectations state to prevent the call to `MockGRPC.verify!` on `on_exit`
@@ -166,7 +166,7 @@ for async <- [true, false] do
         test_key = Process.get(MockGRPC)
 
         for _ <- 1..2 do
-          MockGRPC.expect(GreetService, :say_hello, fn _ ->
+          MockGRPC.expect(GreetService.Service, :say_hello, fn _ ->
             {:ok, %SayHelloResponse{message: "Hello"}}
           end)
         end
@@ -175,7 +175,7 @@ for async <- [true, false] do
         assert {:ok, %SayHelloResponse{}} = GreetService.Stub.say_hello(channel, request)
 
         assert_raise RuntimeError,
-                     "Expected to receive gRPC call to TestSupport.GreetService.Stub.say_hello() but didn't",
+                     "Expected to receive gRPC call to `test_support\.GreetService/say_hello` but didn't",
                      fn -> MockGRPC.verify!(test_key) end
 
         # Clear expectations state to prevent the call to `MockGRPC.verify!` on `on_exit`

@@ -13,7 +13,7 @@ defmodule TestSupport.SayHelloResponse do
   field(:message, 1, type: :string)
 end
 
-defmodule TestSupport.GreetService do
+defmodule TestSupport.GreetService.Service do
   @moduledoc false
   use GRPC.Service,
     name: "test_support.GreetService",
@@ -24,5 +24,5 @@ end
 
 defmodule TestSupport.GreetService.Stub do
   @moduledoc false
-  use GRPC.Stub, service: TestSupport.GreetService
+  use GRPC.Stub, service: TestSupport.GreetService.Service
 end
