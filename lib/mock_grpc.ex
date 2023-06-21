@@ -42,7 +42,7 @@ defmodule MockGRPC do
         test "say_hello/1" do
           MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
             assert %SayHelloRequest{name: "John Doe"} == req
-            %SayHelloResponse{message: "Hello John Doe"}
+            {:ok, %SayHelloResponse{message: "Hello John Doe"}}
           end)
 
           assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
@@ -128,7 +128,7 @@ defmodule MockGRPC do
 
       MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
         assert %SayHelloRequest{name: "John Doe"} == req
-        %SayHelloResponse{message: "Hello John Doe"}
+        {:ok, %SayHelloResponse{message: "Hello John Doe"}}
       end)
 
       assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
@@ -153,7 +153,7 @@ defmodule MockGRPC do
 
       MockGRPC.expect(GreetService, :say_hello, fn req ->
         assert %SayHelloRequest{name: "John Doe"} == req
-        %SayHelloResponse{message: "Hello John Doe"}
+        {:ok, %SayHelloResponse{message: "Hello John Doe"}}
       end)
 
       assert {:ok, %SayHelloResponse{message: "Hello John Doe"}} = Demo.say_hello("John Doe")
@@ -214,7 +214,7 @@ defmodule MockGRPC do
 
         MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
           assert %SayHelloRequest{name: "John Doe"} == req
-          %SayHelloResponse{message: "Hello John Doe"}
+          {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
 
         # This is just an example to demonstrate the concept. In a real world scenario, you'd
