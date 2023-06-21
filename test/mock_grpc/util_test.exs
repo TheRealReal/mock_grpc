@@ -8,7 +8,7 @@ defmodule MockGRPC.UtilTest do
       result = extract_grpc_fun(&TestSupport.GreetService.Stub.say_hello/2)
 
       assert result == %{
-               service_module: TestSupport.GreetService,
+               service_module: TestSupport.GreetService.Service,
                fun_name: :say_hello
              }
     end

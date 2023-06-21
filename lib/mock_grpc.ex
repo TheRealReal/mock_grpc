@@ -143,7 +143,7 @@ defmodule MockGRPC do
 
       _ ->
         raise """
-        Invalid function passed to MockGRPC.expect/2.
+        Invalid function passed to `MockGRPC.expect/2`.
         Expected a stub function capture, e.g.: `&MyService.Stub.fun/2`. Received #{inspect(grpc_fun)}.
         """
     end
@@ -154,7 +154,7 @@ defmodule MockGRPC do
 
   Example:
 
-      MockGRPC.expect(GreetService, :say_hello, fn req ->
+      MockGRPC.expect(GreetService.Service, :say_hello, fn req ->
         assert %SayHelloRequest{name: "John Doe"} == req
         {:ok, %SayHelloResponse{message: "Hello John Doe"}}
       end)
@@ -163,6 +163,15 @@ defmodule MockGRPC do
   """
   def expect(service_module, fun_name, mock_fun)
       when is_atom(service_module) and is_atom(fun_name) and is_function(mock_fun) do
+    Code.ensure_loaded(service_module)
+
+    unless function_exported?(service_module, :__meta__, 1) do
+      raise """
+      Invalid service module passed to `MockGRPC.expect/3`.
+      Expected a module that uses `GRPC.Service`.
+      """
+    end
+
     test_key = Process.get(MockGRPC)
 
     if test_key == nil do
@@ -196,14 +205,13 @@ defmodule MockGRPC do
     if remaining_expectations != [] do
       formatted_failures =
         Enum.map(remaining_expectations, fn %{service_module: mod, fun_name: fun} ->
-          "Expected to receive gRPC call to #{mod_name(mod)}.Stub.#{fun}() but didn't"
+          service_name = mod.__meta__(:name)
+          "Expected to receive gRPC call to `#{service_name}/#{fun}` but didn't"
         end)
 
       raise Enum.join(formatted_failures, "\n")
     end
   end
-
-  defp mod_name(mod), do: mod |> to_string() |> String.replace("Elixir.", "", global: false)
 
   @doc """
   Set mock context, in case the mock is being called from another process in an async test.

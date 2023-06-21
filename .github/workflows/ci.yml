@@ -54,3 +54,7 @@ jobs:
         if: ${{ matrix.lint }}
 
       - run: mix test
+
+      - run: cd ${{ github.workspace }}/misc/demo && mix deps.get && mix test
+
+      - run: cd ${{ github.workspace }}/misc/conn_grpc_demo && mix deps.get && mix test

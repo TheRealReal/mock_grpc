@@ -16,7 +16,7 @@ defmodule MockGRPC.Util do
     parts = Module.split(mod)
 
     if List.last(parts) == "Stub" do
-      parts |> Enum.drop(-1) |> Module.concat()
+      parts |> Enum.drop(-1) |> Enum.concat(["Service"]) |> Module.concat()
     end
   end
 
