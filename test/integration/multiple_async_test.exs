@@ -14,8 +14,8 @@ for i <- 1..20 do
     }
 
     test "expect" do
-      MockGRPC.expect(&GreetService.Stub.say_hello/2, fn arg ->
-        assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+      MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+        assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = req
         {:ok, %SayHelloResponse{message: "Hello #{unquote(i)}"}}
       end)
 
