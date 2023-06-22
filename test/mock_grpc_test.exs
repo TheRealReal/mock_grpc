@@ -24,8 +24,8 @@ for async <- [true, false] do
 
     describe "expect/2" do
       test "mocks the call", %{channel: channel} do
-        MockGRPC.expect(&GreetService.Stub.say_hello/2, fn arg ->
-          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+        MockGRPC.expect(&GreetService.Stub.say_hello/2, fn req ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = req
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
 
@@ -44,8 +44,8 @@ for async <- [true, false] do
 
     describe "expect/3" do
       test "mocks the call", %{channel: channel} do
-        MockGRPC.expect(GreetService.Service, :say_hello, fn arg ->
-          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+        MockGRPC.expect(GreetService.Service, :say_hello, fn req ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = req
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
 
@@ -78,8 +78,8 @@ for async <- [true, false] do
       end
 
       test "makes mock available inside tasks created in the current process", %{channel: channel} do
-        MockGRPC.expect(GreetService.Service, :say_hello, fn arg ->
-          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+        MockGRPC.expect(GreetService.Service, :say_hello, fn req ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = req
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
 
@@ -94,8 +94,8 @@ for async <- [true, false] do
       end
 
       test "supports nested task", %{channel: channel} do
-        MockGRPC.expect(GreetService.Service, :say_hello, fn arg ->
-          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = arg
+        MockGRPC.expect(GreetService.Service, :say_hello, fn req ->
+          assert %SayHelloRequest{first_name: "John", last_name: "Doe"} = req
           {:ok, %SayHelloResponse{message: "Hello John Doe"}}
         end)
 
