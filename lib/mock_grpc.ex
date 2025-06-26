@@ -79,7 +79,7 @@ defmodule MockGRPC do
   @doc false
   def setup(context) do
     if Process.get(MockGRPC) do
-      Logger.warn("Attempted to set up MockGRPC twice. Skipping...")
+      Logger.warning("Attempted to set up MockGRPC twice. Skipping...")
     else
       do_setup(context)
     end
