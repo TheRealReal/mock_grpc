@@ -12,7 +12,7 @@ Add `mock_grpc` to your list of dependencies:
 ```elixir
 def deps do
   [
-    {:mock_grpc, "~> 0.1"},
+    {:mock_grpc, "~> 0.2"},
 
     # You also need to have gRPC Elixir installed
     {:grpc, "~> 0.6"}

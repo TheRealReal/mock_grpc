@@ -26,9 +26,12 @@ defmodule MockGRPC.Adapter do
 
   @impl true
   def send_request(%Stream{request_mod: request_mod} = stream, content, _opts) do
-    input = request_mod.decode(content)
+    input = content |> to_binary() |> request_mod.decode()
     Stream.put_payload(stream, :input, input)
   end
+
+  defp to_binary(content) when is_binary(content), do: content
+  defp to_binary(content) when is_list(content), do: IO.iodata_to_binary(content)
 
   @impl true
   def receive_data(
