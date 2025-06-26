@@ -32,7 +32,7 @@ defmodule MockGRPC.MixProject do
   defp deps do
     [
       {:grpc, "~> 0.6"},
-      {:protobuf, "~> 0.11", only: :test},
+      {:protobuf, "~> 0.14.1", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
