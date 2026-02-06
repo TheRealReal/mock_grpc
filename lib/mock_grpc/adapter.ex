@@ -8,7 +8,16 @@ defmodule MockGRPC.Adapter do
   @impl true
   def connect(channel, _opts) do
     test_key = MockGRPC.Util.get_test_key()
+    # GRPC 0.11.x expects adapter_payload.conn_pid to be set by the adapter.
+    # We use self() as a dummy pid since MockGRPC intercepts requests at the
+    # receive_data/2 level, not at the connection level.
+    case check_server_status(test_key, channel) do
+      {:ok, channel} -> {:ok, %{channel | adapter_payload: %{conn_pid: self()}}}
+      error -> error
+    end
+  end
 
+  defp check_server_status(test_key, channel) do
     if MockGRPC.Server.alive?(test_key) do
       case MockGRPC.Server.get_status(test_key) do
         :up -> {:ok, channel}

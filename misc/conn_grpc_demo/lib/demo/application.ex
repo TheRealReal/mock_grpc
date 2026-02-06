@@ -8,6 +8,7 @@ defmodule Demo.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      {GRPC.Client.Supervisor, []},
       Demo.DemoPool
     ]
 
