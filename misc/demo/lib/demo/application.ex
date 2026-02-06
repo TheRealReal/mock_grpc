@@ -8,8 +8,7 @@ defmodule Demo.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Demo.Worker.start_link(arg)
-      # {Demo.Worker, arg}
+      {GRPC.Client.Supervisor, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

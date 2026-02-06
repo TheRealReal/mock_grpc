@@ -22,8 +22,8 @@ defmodule Demo.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:grpc, "~> 0.6"},
-      {:protobuf, "~> 0.11"},
+      {:grpc, "~> 0.11"},
+      {:protobuf, "~> 0.14"},
       {:mock_grpc, path: "../../"}
     ]
   end
