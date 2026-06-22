@@ -48,7 +48,11 @@ defmodule MockGRPC.Adapter do
         _opts
       ) do
     test_key = MockGRPC.Util.get_test_key()
-    fun_name = elem(rpc, 0)
+    # GRPC 0.11.x stored the underscored function name (e.g. "say_hello") in
+    # element 0 of the rpc tuple. GRPC 1.0 keeps the original casing (e.g.
+    # `:SayHello`). Normalize so expectations registered against the snake_case
+    # stub function match either runtime.
+    fun_name = rpc |> elem(0) |> to_string() |> Macro.underscore()
 
     unless MockGRPC.Server.alive?(test_key) do
       raise """
