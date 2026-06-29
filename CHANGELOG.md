@@ -1,5 +1,9 @@
 # Changelog for MockGRPC
 
+## v1.0.0
+
+- Add support for `grpc` 1.0.0, by @yordis
+
 ## v0.2.1
 
 ### Fix

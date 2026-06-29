@@ -2,7 +2,7 @@ defmodule MockGRPC.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/TheRealReal/mock_grpc"
-  @version "0.2.1"
+  @version "1.0.0"
 
   def project do
     [
@@ -31,8 +31,9 @@ defmodule MockGRPC.MixProject do
 
   defp deps do
     [
-      {:grpc, "~> 0.6 or ~> 0.11"},
-      {:protobuf, "~> 0.14.1", only: :test},
+      {:grpc, "~> 0.6 or ~> 0.11 or ~> 1.0"},
+      {:grpc_server, "~> 1.0", only: :test},
+      {:protobuf, "~> 0.14.1 or ~> 0.17", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
