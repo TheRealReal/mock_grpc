@@ -2,7 +2,7 @@ defmodule MockGRPC.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/TheRealReal/mock_grpc"
-  @version "0.2.1"
+  @version "1.0.0"
 
   def project do
     [
